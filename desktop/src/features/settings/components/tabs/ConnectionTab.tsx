@@ -82,13 +82,13 @@ export function ConnectionTab() {
           {(["low", "medium", "high", "lan_turbo"] as ConnectionSpeedType[]).map((type) => (
             <button
               onClick={() => updateSettings({ connectionType: type })}
-              class={`p-2 border text-left font-bold transition ${
+              class={`p-2 border text-left font-bold transition cursor-pointer ${
                 settings().connectionType === type
-                  ? "bg-[var(--bg-surface)] text-[var(--accent)] border-[var(--accent)]"
-                  : "border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  ? "bg-[var(--bg-primary)] border-[var(--accent)] text-[var(--accent)] shadow-sm"
+                  : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
-              <div class="uppercase">{type.replace("_", " ")}</div>
+              <div class="uppercase tracking-wider">{type.replace("_", " ")}</div>
             </button>
           ))}
         </div>

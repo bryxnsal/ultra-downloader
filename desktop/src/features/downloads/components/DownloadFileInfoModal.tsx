@@ -5,7 +5,7 @@ import { formatBytes } from "../../../shared/utils";
 import { joinPaths, splitPath, normalizePath } from "../../../shared/pathUtils";
 import { useSettings } from "../../../shared/stores/settingsStore";
 import { WindowControls } from "../../../shared/components/WindowControls";
-import { X, Folder, HelpCircle, HardDrive, ShieldCheck, AlertTriangle } from "lucide-solid";
+import { AlertTriangle } from "lucide-solid";
 
 interface DownloadFileInfoModalProps {
   isOpen: boolean;
@@ -239,8 +239,8 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
     <div
       class={
         props.isStandaloneWindow
-          ? "w-full h-full bg-[var(--bg-secondary)] flex flex-col justify-between text-[12px] select-none relative"
-          : "w-full max-w-2xl border border-[var(--border)] bg-[var(--bg-secondary)] shadow-2xl rounded-none flex flex-col text-[12px] relative"
+          ? "w-full h-full bg-[var(--bg-primary)] flex flex-col justify-between text-[12px] select-none relative"
+          : "w-full max-w-2xl border border-[var(--border)] bg-[var(--bg-primary)] shadow-2xl rounded-none flex flex-col text-[12px] relative"
       }
     >
       <Show when={showFfmpegWarning()}>
@@ -304,7 +304,6 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
 
       {/* Formulario */}
       <div class="px-3.5 py-2.5 space-y-2 flex-1 overflow-y-auto">
-        {/* URL Row */}
         <div class="grid grid-cols-6 gap-2 items-center">
           <label class="col-span-1 font-bold text-[var(--text-muted)] uppercase tracking-wide">
             {t("url_label")}
@@ -315,19 +314,18 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
               value={urlInput()}
               onInput={(e) => setUrlInput(e.currentTarget.value)}
               placeholder="https://domain.com/file.iso"
-              class="w-full border border-[var(--border)] bg-[var(--bg-primary)] px-2.5 py-1 text-[var(--text-main)] font-mono text-[11px] focus:outline-none focus:border-[var(--accent)]"
+              class="w-full h-7 border border-[var(--border)] bg-[var(--bg-primary)] px-2.5 text-[var(--text-main)] font-mono text-[11px] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <button
             onClick={probeUrlHandler}
             disabled={probing() || !urlInput()}
-            class="col-span-1 border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40 cursor-pointer uppercase text-[10px] tracking-wider transition-colors"
+            class="col-span-1 h-7 border border-[var(--border)] bg-[var(--bg-surface)] px-2 font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40 cursor-pointer uppercase text-[10px] tracking-wider transition-colors"
           >
             {probing() ? t("probing") : t("probe_head")}
           </button>
         </div>
 
-        {/* Category Row */}
         <div class="grid grid-cols-6 gap-2 items-center">
           <label class="col-span-1 font-bold text-[var(--text-muted)] uppercase tracking-wide">
             {t("category_label")}
@@ -336,7 +334,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
             <select
               value={category()}
               onChange={(e) => updateCategoryAndPath(e.currentTarget.value)}
-              class="w-full border border-[var(--border)] bg-[var(--bg-primary)] px-2 py-1 text-[var(--text-main)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+              class="w-full h-7 border border-[var(--border)] bg-[var(--bg-primary)] px-2 text-[var(--text-main)] focus:outline-none focus:border-[var(--accent)] cursor-pointer text-[11px]"
             >
               {categories.map((c) => (
                 <option value={c}>{c}</option>
@@ -345,33 +343,33 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
             <button
               type="button"
               title="Nueva categoría"
-              class="border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-0.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent)] cursor-pointer"
+              class="w-7 h-7 shrink-0 border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent)] cursor-pointer font-bold text-xs flex items-center justify-center"
             >
               +
             </button>
           </div>
 
-          {/* Preview / Badge de tamaño detectado */}
-          <div class="col-span-2 flex items-center justify-end gap-1.5 px-2 py-0.5 border border-[var(--border)] bg-[var(--bg-surface)] text-[10px] text-[var(--text-muted)]">
-            <HardDrive size={13} class="text-[var(--accent)] shrink-0" />
-            <span class="truncate">
-              {probedMeta()?.content_length && probedMeta()!.content_length! > 0
-                ? formatBytes(probedMeta()!.content_length!)
-                : t("unknown")}
-            </span>
-            <span
-              class={`px-1 py-0.2 text-[9px] uppercase font-mono ${
-                probedMeta()?.accepts_ranges
-                  ? "text-[var(--accent)] bg-[var(--accent)]/10"
-                  : "text-red-400 bg-red-400/10"
-              }`}
-            >
-              {probedMeta()?.accepts_ranges ? "RANGES" : "NO-RANGE"}
-            </span>
+          <div class="col-span-2 flex justify-start">
+            <div class="h-7 inline-flex items-center gap-1.5 px-2 border border-[var(--border)] bg-[var(--bg-surface)] text-[10px] font-mono text-[var(--text-muted)]">
+              <span class="text-[9px] uppercase tracking-wider text-[var(--text-muted)] font-bold">SIZE:</span>
+              <span class="text-[var(--text-main)] font-bold">
+                {probedMeta()?.content_length && probedMeta()!.content_length! > 0
+                  ? formatBytes(probedMeta()!.content_length!)
+                  : t("unknown")}
+              </span>
+              <span
+                class={`px-1 py-0.5 text-[8px] uppercase font-mono font-bold ${
+                  probedMeta()?.accepts_ranges
+                    ? "text-[var(--accent)] bg-[var(--accent)]/15"
+                    : "text-red-400 bg-red-400/15"
+                }`}
+              >
+                {probedMeta()?.accepts_ranges ? "RANGES" : "NO-RANGE"}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Save As Row */}
         <div class="grid grid-cols-6 gap-2 items-center">
           <label class="col-span-1 font-bold text-[var(--text-muted)] uppercase tracking-wide">
             {t("save_as_label")}
@@ -381,16 +379,15 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
               type="text"
               value={savePath()}
               onInput={(e) => setSavePath(e.currentTarget.value)}
-              class="w-full border border-[var(--border)] bg-[var(--bg-primary)] px-2.5 py-1 text-[var(--text-main)] font-mono text-[11px] focus:outline-none focus:border-[var(--accent)]"
+              class="w-full h-7 border border-[var(--border)] bg-[var(--bg-primary)] px-2.5 text-[var(--text-main)] font-mono text-[11px] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <button
             type="button"
             onClick={handleBrowseFolder}
-            class="col-span-1 border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] cursor-pointer uppercase text-[11px] flex items-center justify-center gap-1 transition-colors"
+            class="col-span-1 h-7 border border-[var(--border)] bg-[var(--bg-surface)] px-2 font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] cursor-pointer uppercase text-[10px] tracking-wider transition-colors"
           >
-            <Folder size={12} />
-            <span>{t("browse")}</span>
+            {t("browse")}
           </button>
         </div>
 
