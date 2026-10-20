@@ -211,5 +211,10 @@
   "ffmpeg_warning_desc": "Este video requiere FFmpeg para combinar las pistas de video y audio. Si continúas sin FFmpeg, el archivo se descargará únicamente como video sin sonido.",
   "ffmpeg_install_hint_linux": "Arch / Manjaro: sudo pacman -S ffmpeg | Ubuntu / Debian: sudo apt install ffmpeg",
   "ffmpeg_configure_hint": "O puedes especificar la ruta del ejecutable en Opciones > Avanzado.",
-  "continue_without_audio": "CONTINUAR SIN AUDIO"
+  "continue_without_audio": "CONTINUAR SIN AUDIO",
+  "add": "AÑADIR",
+  "exclude_site_title": "EXCLUIR DESCARGAS DEL SITIO",
+  "exclude_site_desc": "Has cancelado la descarga de este sitio 3 veces seguidas. ¿Deseas evitar que Ultra Downloader capture automáticamente descargas provenientes de este origen?",
+  "exclude_exact_domain": "Solo este dominio",
+  "exclude_all_subdomains": "Este dominio y todos sus subdominios"
 }

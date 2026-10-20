@@ -8,6 +8,7 @@ import "./App.css";
 import { DownloadFileInfoModal } from "./features/downloads/components/DownloadFileInfoModal";
 import { DownloadProgressModal } from "./features/downloads/components/DownloadProgressModal";
 import { DownloadCompleteModal } from "./features/downloads/components/DownloadCompleteModal";
+import { ExcludeDomainModal } from "./features/downloads/components/ExcludeDomainModal";
 import { SettingsModal } from "./features/settings/components/SettingsModal";
 import { UpdateModal } from "./features/settings/components/UpdateModal";
 import { CustomTrayMenu } from "./features/tray/components/CustomTrayMenu";
@@ -263,6 +264,22 @@ function RootRouter() {
         <UpdateModal
           isOpen={true}
           isStandaloneWindow={true}
+          onClose={closeCurrentWindow}
+        />
+      </div>
+    );
+  }
+
+  if (view === "exclude-domain") {
+    onMount(() => {
+      revealWindowWhenReady("EXCLUDE SITE");
+    });
+
+    return (
+      <div class="h-screen w-screen bg-[var(--bg-primary)] p-0 m-0 overflow-hidden select-none border border-[var(--border)]">
+        <ExcludeDomainModal
+          initialUrl={initialUrl}
+          domain={params.get("domain") || undefined}
           onClose={closeCurrentWindow}
         />
       </div>

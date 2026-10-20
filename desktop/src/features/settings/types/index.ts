@@ -59,6 +59,6 @@ export const DEFAULT_SETTINGS: SettingsState = {
   autostartEnabled: false,
   nativeMessagingEnabled: true,
   interceptExtensions: "3GP 7Z AAC ACE AVI BIN BZ2 EXE GZ GZIP IMG ISO LZH M4A M4V MKV MOV MP3 MP4 MSI PDF RAR TAR ZIP",
-  exceptionServers: "*.update.microsoft.com download.windowsupdate.com siteseal.thawte.com",
+  exceptionServers: "",
   grabberTheme: "same_as_app",
 };

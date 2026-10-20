@@ -159,6 +159,85 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
     return true;
   };
 
+  const getUrlHostname = (urlStr: string): string => {
+    try {
+      const u = new URL(urlStr);
+      return u.hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+      return urlStr.split("/")[0].toLowerCase().replace(/^www\./, "");
+    }
+  };
+
+  const isExcludedOrIgnored = (hostname: string): boolean => {
+    if (!hostname) return true;
+    if (
+      hostname.includes("youtube.com") ||
+      hostname.includes("youtu.be") ||
+      hostname.includes("googlevideo.com")
+    ) {
+      return true;
+    }
+    const list = settings().exceptionServers
+      ? settings().exceptionServers.split(/[\s,;|]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)
+      : [];
+    return list.some((rule) => {
+      if (rule.startsWith("*.")) {
+        const root = rule.slice(2);
+        return hostname === root || hostname.endsWith(`.${root}`);
+      }
+      return hostname === rule;
+    });
+  };
+
+  const handleCancelClick = async () => {
+    const rawUrl = urlInput().trim();
+    if (rawUrl) {
+      const host = getUrlHostname(rawUrl);
+      if (host && !isExcludedOrIgnored(host)) {
+        try {
+          const STORAGE_CANCEL_KEY = "udm_cancel_domain_counts";
+          const counts = JSON.parse(localStorage.getItem(STORAGE_CANCEL_KEY) || "{}");
+          const nextCount = (counts[host] || 0) + 1;
+
+          if (nextCount >= 3) {
+            delete counts[host];
+            localStorage.setItem(STORAGE_CANCEL_KEY, JSON.stringify(counts));
+
+            invoke("open_aux_window", {
+              windowType: "exclude-domain",
+              taskId: null,
+              initialUrl: rawUrl,
+              audioUrl: null,
+              suggestedFilename: null,
+            }).catch(() => {});
+          } else {
+            counts[host] = nextCount;
+            localStorage.setItem(STORAGE_CANCEL_KEY, JSON.stringify(counts));
+          }
+        } catch {}
+      }
+    }
+
+    props.onClose();
+  };
+
+  const resetCancelCount = () => {
+    const rawUrl = urlInput().trim();
+    if (rawUrl) {
+      const host = getUrlHostname(rawUrl);
+      if (host) {
+        try {
+          const STORAGE_CANCEL_KEY = "udm_cancel_domain_counts";
+          const counts = JSON.parse(localStorage.getItem(STORAGE_CANCEL_KEY) || "{}");
+          if (counts[host]) {
+            delete counts[host];
+            localStorage.setItem(STORAGE_CANCEL_KEY, JSON.stringify(counts));
+          }
+        } catch {}
+      }
+    }
+  };
+
   const handleStart = async (overrideWithoutAudio = false) => {
     const u = urlInput().trim();
     if (!u) return;
@@ -167,6 +246,8 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
       const ok = await verifyFfmpegBeforeAction("start");
       if (!ok) return;
     }
+
+    resetCancelCount();
 
     try {
       const meta = probedMeta();
@@ -196,6 +277,8 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
       const ok = await verifyFfmpegBeforeAction("later");
       if (!ok) return;
     }
+
+    resetCancelCount();
 
     try {
       const meta = probedMeta();
@@ -299,7 +382,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
             {t("file_info_title")}
           </span>
         </div>
-        <WindowControls onClose={props.onClose} hideMaximize={true} />
+        <WindowControls onClose={handleCancelClick} hideMaximize={true} />
       </div>
 
       {/* Formulario */}
@@ -443,7 +526,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
             {t("start_download")}
           </button>
           <button
-            onClick={props.onClose}
+            onClick={handleCancelClick}
             class="border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-1 font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer uppercase tracking-wider text-[11px] transition-colors"
           >
             {t("cancel")}

@@ -17,6 +17,9 @@ function loadPersistedSettings(): SettingsState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (parsed.exceptionServers === "*.update.microsoft.com download.windowsupdate.com siteseal.thawte.com") {
+        parsed.exceptionServers = "";
+      }
       return {
         ...DEFAULT_SETTINGS,
         ...parsed,

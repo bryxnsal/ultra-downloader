@@ -279,6 +279,7 @@ async fn open_aux_window(
         "complete" => format!("win-complete-{}", task_id.clone().unwrap_or_else(|| "done".into())),
         "settings" => "win-settings".to_string(),
         "updater" => "win-updater".to_string(),
+        "exclude-domain" => "win-exclude-domain".to_string(),
         _ => return Err("Invalid window type".into()),
     };
 
@@ -301,6 +302,7 @@ async fn open_aux_window(
         "complete" => "Download Complete".to_string(),
         "settings" => "Options".to_string(),
         "updater" => "UPDATER".to_string(),
+        "exclude-domain" => "EXCLUDE SITE".to_string(),
         _ => return Err("Invalid window type".into()),
     };
 
@@ -310,6 +312,7 @@ async fn open_aux_window(
         "complete" => (520.0, 260.0, false),
         "settings" => (620.0, 480.0, false),
         "updater" => (460.0, 300.0, false),
+        "exclude-domain" => (480.0, 230.0, false),
         _ => return Err("Invalid window type".into()),
     };
 
