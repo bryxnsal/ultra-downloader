@@ -11,6 +11,12 @@
 [![Tauri](https://img.shields.io/badge/Tauri-v2-24C8D8.svg)](https://tauri.app/)
 [![SolidJS](https://img.shields.io/badge/SolidJS-v1.8-446b9e.svg)](https://www.solidjs.com/)
 
+<br />
+
+<p align="center">
+  <img src="assets/screenshot.png" alt="Ultra Downloader Interface" width="900" />
+</p>
+
 [Downloads](#-downloads) • [Features](#-features) • [Browser Extension](#-browser-extension) • [Building from Source](#-building-from-source) • [Architecture](#-architecture)
 
 </div>
