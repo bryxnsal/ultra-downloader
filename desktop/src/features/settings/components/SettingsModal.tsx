@@ -7,6 +7,8 @@ import { LanguageTab } from "./tabs/LanguageTab";
 import { SavingTab } from "./tabs/SavingTab";
 import { FileTypesTab } from "./tabs/FileTypesTab";
 import { GeneralTab } from "./tabs/GeneralTab";
+import { AboutTab } from "./tabs/AboutTab";
+import { UpdateModal } from "./UpdateModal";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -14,11 +16,12 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type TabKey = "connection" | "theme" | "language" | "saving" | "file_types" | "general";
+type TabKey = "connection" | "theme" | "language" | "saving" | "file_types" | "general" | "about";
 
 export function SettingsModal(props: SettingsModalProps) {
   const { t } = useSettings();
   const [activeTab, setActiveTab] = createSignal<TabKey>("connection");
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = createSignal(false);
 
   const tabs: { key: TabKey; labelKey: any }[] = [
     { key: "connection", labelKey: "tab_connection" },
@@ -27,6 +30,7 @@ export function SettingsModal(props: SettingsModalProps) {
     { key: "saving", labelKey: "tab_saving" },
     { key: "file_types", labelKey: "tab_file_types" },
     { key: "general", labelKey: "tab_general" },
+    { key: "about", labelKey: "tab_about" },
   ];
 
   const content = (
@@ -74,6 +78,9 @@ export function SettingsModal(props: SettingsModalProps) {
         {activeTab() === "saving" && <SavingTab />}
         {activeTab() === "file_types" && <FileTypesTab />}
         {activeTab() === "general" && <GeneralTab />}
+        {activeTab() === "about" && (
+          <AboutTab onCheckUpdates={() => setIsUpdateModalOpen(true)} />
+        )}
       </div>
 
       <div class="h-11 px-4 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex items-center justify-end gap-2 shrink-0">
@@ -90,14 +97,21 @@ export function SettingsModal(props: SettingsModalProps) {
   );
 
   return (
-    <Show when={props.isOpen}>
-      {props.isStandaloneWindow ? (
-        content
-      ) : (
-        <div class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50 select-none">
-          {content}
-        </div>
-      )}
-    </Show>
+    <>
+      <Show when={props.isOpen}>
+        {props.isStandaloneWindow ? (
+          content
+        ) : (
+          <div class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50 select-none">
+            {content}
+          </div>
+        )}
+      </Show>
+
+      <UpdateModal
+        isOpen={isUpdateModalOpen()}
+        onClose={() => setIsUpdateModalOpen(false)}
+      />
+    </>
   );
 }
