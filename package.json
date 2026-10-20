@@ -1,0 +1,16 @@
+{
+  "name": "ultra-downloader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:desktop": "pnpm --filter @ultra/desktop dev",
+    "build:desktop": "pnpm --filter @ultra/desktop build",
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Ultra Downloader Integration",
+  "version": "1.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzSOuAyMuD+XReaeGeiy5gayrdbwKJNQxhEr8wa4//hSmPaFdYWYnh2nMWPVnIL5/5acrkaIYqK4wzsX38d0M057jZY/JkTzQN1Thm7+xJA7Ab4Y2R7vI1vWWfI+x4TYiUMOjwenjveLF5alndaRpNKDBigfOkJyR0HfdhgXXT+d/38lTESHDW4jpnYthpZJ6O7K2KbPYbqd7YOlUJeJMzMHBy24si6HYzO3IvzehyqPhcD7nahRPA+mjAGNzK168D0axILqSxc/iKeNul+SzeG3r8TZzIfMqvMEUU08xyxL3WFYFX6aF4ravYBB/1xS+1CAczMM33Vhb9gFx7ydLmQIDAQAB",
+  "description": "High-performance dynamic downloader integration and media grabber.",
+  "permissions": [
+    "downloads",
+    "cookies",
+    "tabs",
+    "storage",
+    "contextMenus",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["panel.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["*://*.youtube.com/*"]
+    },
+    {
+      "resources": ["icons/logo.svg", "icons/icon-32.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_title": "Ultra Downloader",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "@ultra/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ultra Downloader WebExtension"
+}

@@ -1,0 +1,126 @@
+name: Release Ultra Downloader
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-extensions:
+    name: Package Browser Extensions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Chrome Extension ZIP
+        run: |
+          mkdir -p dist-ext/chrome dist-ext/firefox
+          cp -r extension/* dist-ext/chrome/
+          cd dist-ext/chrome
+          zip -r ../../ultra-extension-chrome.zip .
+          cd ../..
+
+      - name: Build Firefox Extension ZIP
+        run: |
+          cp -r extension/* dist-ext/firefox/
+          # Adjust manifest for Firefox MV3 compatibility
+          node -e '
+            const fs = require("fs");
+            const manifest = JSON.parse(fs.readFileSync("dist-ext/firefox/manifest.json", "utf8"));
+            manifest.background = {
+              scripts: ["background.js"]
+            };
+            manifest.browser_specific_settings = {
+              gecko: {
+                id: "addon@ultra-downloader.com",
+                strict_min_version: "109.0"
+              }
+            };
+            fs.writeFileSync("dist-ext/firefox/manifest.json", JSON.stringify(manifest, null, 2));
+          '
+          cd dist-ext/firefox
+          zip -r ../../ultra-extension-firefox.zip .
+          cd ../..
+
+      - name: Upload Extension Artifacts to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ultra-extension-chrome.zip
+            ultra-extension-firefox.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-apps:
+    name: Build App (${{ matrix.platform }})
+    needs: []
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            args: ''
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-13'
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || matrix.platform == 'macos-13' && 'x86_64-apple-darwin' || '' }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and Publish with Tauri Action
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Ultra Downloader ${{ github.ref_name }}'
+          releaseBody: 'High-performance Multi-threaded Dynamic Downloader inspired by IDM. Compatible with Windows, macOS, and Linux.'
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
