@@ -15,10 +15,10 @@ use crate::models::{DownloadTask, UrlMetadata};
 use crate::server::{BrowserBridgeConfig, BrowserServerState, DEFAULT_SERVER_PORT};
 use crate::storage::StateStorage;
 
-pub fn force_square_corners<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
+pub fn force_square_corners<R: tauri::Runtime>(_window: &tauri::WebviewWindow<R>) {
     #[cfg(windows)]
     {
-        if let Ok(hwnd) = window.hwnd() {
+        if let Ok(hwnd) = _window.hwnd() {
             unsafe {
                 use windows_sys::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND};
                 let corner_pref = DWMWCP_DONOTROUND;
@@ -241,9 +241,14 @@ fn sync_appimage_filename(_new_version: String) -> Result<Option<String>, String
             if let (Some(parent), Some(file_name)) = (path.parent(), path.file_name()) {
                 let name_str = file_name.to_string_lossy();
                 if name_str.ends_with(".AppImage") && !name_str.contains(&_new_version) {
-                    let re = regex::Regex::new(r"_\d+\.\d+\.\d+_").unwrap();
-                    let new_file_name = if re.is_match(&name_str) {
-                        re.replace(&name_str, format!("_{}_", _new_version)).to_string()
+                    // Reemplazo limpio y robusto del patrón de versión sin dependencias externas
+                    // Formato habitual: Ultra.Downloader_0.2.1_amd64.AppImage
+                    let new_file_name = if let (Some(start_idx), Some(end_idx)) = (name_str.find('_'), name_str.rfind('_')) {
+                        if start_idx < end_idx {
+                            format!("{}_{}_{}", &name_str[..start_idx], _new_version, &name_str[end_idx + 1..])
+                        } else {
+                            format!("Ultra.Downloader_{}_amd64.AppImage", _new_version)
+                        }
                     } else {
                         format!("Ultra.Downloader_{}_amd64.AppImage", _new_version)
                     };
