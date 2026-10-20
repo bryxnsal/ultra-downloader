@@ -206,5 +206,10 @@
   "update_retry": "REINTENTAR",
   "update_download_install": "DESCARGAR E INSTALAR",
   "update_restart_apply": "REINICIAR Y APLICAR",
-  "close": "CERRAR"
+  "close": "CERRAR",
+  "ffmpeg_warning_title": "ADVERTENCIA: FFMPEG NO DETECTADO",
+  "ffmpeg_warning_desc": "Este video requiere FFmpeg para combinar las pistas de video y audio. Si continúas sin FFmpeg, el archivo se descargará únicamente como video sin sonido.",
+  "ffmpeg_install_hint_linux": "Arch / Manjaro: sudo pacman -S ffmpeg | Ubuntu / Debian: sudo apt install ffmpeg",
+  "ffmpeg_configure_hint": "O puedes especificar la ruta del ejecutable en Opciones > Avanzado.",
+  "continue_without_audio": "CONTINUAR SIN AUDIO"
 }

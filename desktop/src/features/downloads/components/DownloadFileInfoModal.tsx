@@ -5,7 +5,7 @@ import { formatBytes } from "../../../shared/utils";
 import { joinPaths, splitPath, normalizePath } from "../../../shared/pathUtils";
 import { useSettings } from "../../../shared/stores/settingsStore";
 import { WindowControls } from "../../../shared/components/WindowControls";
-import { X, Folder, HelpCircle, HardDrive, ShieldCheck } from "lucide-solid";
+import { X, Folder, HelpCircle, HardDrive, ShieldCheck, AlertTriangle } from "lucide-solid";
 
 interface DownloadFileInfoModalProps {
   isOpen: boolean;
@@ -30,6 +30,8 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
   const [description, setDescription] = createSignal("");
   const [probing, setProbing] = createSignal(false);
   const [probedMeta, setProbedMeta] = createSignal<UrlMetadata | null>(null);
+  const [showFfmpegWarning, setShowFfmpegWarning] = createSignal(false);
+  const [pendingAction, setPendingAction] = createSignal<"start" | "later" | null>(null);
 
   const categories = ["General", "Compressed", "Documents", "Music", "Programs", "Video"];
 
@@ -132,16 +134,50 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
     };
   };
 
-  const handleStart = async () => {
+  const isYouTubeMuxedVideo = () => {
+    // Solo aplica a videos que tienen un stream de audio separado para acoplar
+    const hasAudioStream = Boolean(audioUrlInput());
+    const u = urlInput();
+    const isYt = u.includes("googlevideo.com") || u.includes("youtube.com") || u.includes("youtu.be");
+    return hasAudioStream && isYt;
+  };
+
+  const verifyFfmpegBeforeAction = async (action: "start" | "later"): Promise<boolean> => {
+    if (!isYouTubeMuxedVideo()) {
+      return true;
+    }
+
+    try {
+      const hasFfmpeg = await invoke<boolean>("check_ffmpeg_installed");
+      if (!hasFfmpeg) {
+        setPendingAction(action);
+        setShowFfmpegWarning(true);
+        return false;
+      }
+    } catch {
+      // Si falla la verificación, continuar sin bloquear
+    }
+
+    return true;
+  };
+
+  const handleStart = async (overrideWithoutAudio = false) => {
     const u = urlInput().trim();
     if (!u) return;
+
+    if (!overrideWithoutAudio) {
+      const ok = await verifyFfmpegBeforeAction("start");
+      if (!ok) return;
+    }
 
     try {
       const meta = probedMeta();
       const fname = meta?.suggested_filename || u.split("/").pop()?.split("?")[0] || "download.bin";
+      const targetAudioUrl = overrideWithoutAudio ? null : audioUrlInput();
+
       const createdTask = await invoke<DownloadTask>("add_task", {
         url: u,
-        audioUrl: audioUrlInput(),
+        audioUrl: targetAudioUrl,
         filename: fname,
         destinationPath: savePath(),
         connections: settings().maxConnectionsNumber,
@@ -154,16 +190,23 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
     }
   };
 
-  const handleLater = async () => {
+  const handleLater = async (overrideWithoutAudio = false) => {
     const u = urlInput().trim();
     if (!u) return;
+
+    if (!overrideWithoutAudio) {
+      const ok = await verifyFfmpegBeforeAction("later");
+      if (!ok) return;
+    }
 
     try {
       const meta = probedMeta();
       const fname = meta?.suggested_filename || u.split("/").pop()?.split("?")[0] || "download.bin";
+      const targetAudioUrl = overrideWithoutAudio ? null : audioUrlInput();
+
       const createdTask = await invoke<DownloadTask>("add_task", {
         url: u,
-        audioUrl: audioUrlInput(),
+        audioUrl: targetAudioUrl,
         filename: fname,
         destinationPath: savePath(),
         connections: settings().maxConnectionsNumber,
@@ -198,10 +241,56 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
     <div
       class={
         props.isStandaloneWindow
-          ? "w-full h-full bg-[var(--bg-secondary)] flex flex-col justify-between text-[12px] select-none"
-          : "w-full max-w-2xl border border-[var(--border)] bg-[var(--bg-secondary)] shadow-2xl rounded-none flex flex-col text-[12px]"
+          ? "w-full h-full bg-[var(--bg-secondary)] flex flex-col justify-between text-[12px] select-none relative"
+          : "w-full max-w-2xl border border-[var(--border)] bg-[var(--bg-secondary)] shadow-2xl rounded-none flex flex-col text-[12px] relative"
       }
     >
+      {/* FFmpeg Warning Sub-Modal */}
+      <Show when={showFfmpegWarning()}>
+        <div class="absolute inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
+          <div class="w-full max-w-md border-2 border-[var(--border)] bg-[var(--bg-surface)] p-4 space-y-3 font-mono text-[11px] shadow-2xl">
+            <div class="flex items-center gap-2 text-amber-400 font-bold border-b border-[var(--border)] pb-2">
+              <AlertTriangle class="w-4 h-4 shrink-0" />
+              <span class="uppercase tracking-wider">{t("ffmpeg_warning_title")}</span>
+            </div>
+
+            <p class="text-[10px] text-[var(--text-main)] leading-relaxed">
+              {t("ffmpeg_warning_desc")}
+            </p>
+
+            <div class="p-2 bg-[var(--bg-primary)] border border-[var(--border)] text-[9px] text-[var(--text-muted)] space-y-1">
+              <p>• {t("ffmpeg_install_hint_linux")}</p>
+              <p>• {t("ffmpeg_configure_hint")}</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border)]">
+              <button
+                onClick={() => {
+                  setShowFfmpegWarning(false);
+                  const act = pendingAction();
+                  setPendingAction(null);
+                  if (act === "start") handleStart(true);
+                  if (act === "later") handleLater(true);
+                }}
+                class="px-3 py-1.5 border border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 font-bold uppercase text-[10px] cursor-pointer"
+              >
+                {t("continue_without_audio")}
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowFfmpegWarning(false);
+                  setPendingAction(null);
+                }}
+                class="px-3 py-1.5 border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold uppercase text-[10px] cursor-pointer"
+              >
+                {t("cancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Show>
+
       {/* Header Frameless Arrastrable con Controles Custom */}
       <div
         data-tauri-drag-region
