@@ -18,7 +18,7 @@
   "col_speed": "SPEED",
   "col_status": "STATUS",
   "empty_queue_title": "DOWNLOAD QUEUE EMPTY",
-  "empty_queue_desc": "Press NEW TASK or DEMO RUSH to start concurrent sockets.",
+  "empty_queue_desc": "Press NEW TASK to start a download or add links from your browser.",
   "load_demo": "LOAD DEMO EXAMPLE",
   "inspector_title": "CHUNKS INSPECTOR",
   "inactive": "INACTIVE",

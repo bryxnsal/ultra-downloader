@@ -18,7 +18,7 @@
   "col_speed": "VELOCIDAD",
   "col_status": "ESTADO",
   "empty_queue_title": "COLA DE DESCARGAS VACIA",
-  "empty_queue_desc": "Presiona NUEVA TAREA o DEMO RUSH para iniciar sockets concurrentes.",
+  "empty_queue_desc": "Presiona NUEVA TAREA para iniciar una descarga o añade enlaces desde el navegador.",
   "load_demo": "CARGAR EJEMPLO DEMO",
   "inspector_title": "INSPECTOR DE FRAGMENTOS",
   "inactive": "INACTIVO",
