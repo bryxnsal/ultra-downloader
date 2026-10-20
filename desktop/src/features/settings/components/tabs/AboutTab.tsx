@@ -52,7 +52,7 @@ export function AboutTab(props: AboutTabProps) {
                 Ultra Downloader
               </h3>
               <span class="px-1.5 py-0.5 bg-[var(--accent)] text-[var(--bg-primary)] font-mono font-bold text-[9px]">
-                v0.2.2
+                v0.2.3
               </span>
             </div>
             <p class="text-[10px] text-[var(--text-muted)]">
