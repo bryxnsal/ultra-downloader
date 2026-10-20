@@ -135,7 +135,6 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
   };
 
   const isYouTubeMuxedVideo = () => {
-    // Solo aplica a videos que tienen un stream de audio separado para acoplar
     const hasAudioStream = Boolean(audioUrlInput());
     const u = urlInput();
     const isYt = u.includes("googlevideo.com") || u.includes("youtube.com") || u.includes("youtu.be");
@@ -155,7 +154,6 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
         return false;
       }
     } catch {
-      // Si falla la verificación, continuar sin bloquear
     }
 
     return true;
@@ -245,7 +243,6 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
           : "w-full max-w-2xl border border-[var(--border)] bg-[var(--bg-secondary)] shadow-2xl rounded-none flex flex-col text-[12px] relative"
       }
     >
-      {/* FFmpeg Warning Sub-Modal */}
       <Show when={showFfmpegWarning()}>
         <div class="absolute inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
           <div class="w-full max-w-md border-2 border-[var(--border)] bg-[var(--bg-surface)] p-4 space-y-3 font-mono text-[11px] shadow-2xl">

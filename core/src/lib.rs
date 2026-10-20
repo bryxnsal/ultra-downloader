@@ -241,8 +241,6 @@ fn sync_appimage_filename(_new_version: String) -> Result<Option<String>, String
             if let (Some(parent), Some(file_name)) = (path.parent(), path.file_name()) {
                 let name_str = file_name.to_string_lossy();
                 if name_str.ends_with(".AppImage") && !name_str.contains(&_new_version) {
-                    // Reemplazo limpio y robusto del patrón de versión sin dependencias externas
-                    // Formato habitual: Ultra.Downloader_0.2.1_amd64.AppImage
                     let new_file_name = if let (Some(start_idx), Some(end_idx)) = (name_str.find('_'), name_str.rfind('_')) {
                         if start_idx < end_idx {
                             format!("{}_{}_{}", &name_str[..start_idx], _new_version, &name_str[end_idx + 1..])
