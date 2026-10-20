@@ -237,6 +237,7 @@ async fn open_aux_window(
         "progress" => format!("win-progress-{}", task_id.clone().unwrap_or_else(|| "active".into())),
         "complete" => format!("win-complete-{}", task_id.clone().unwrap_or_else(|| "done".into())),
         "settings" => "win-settings".to_string(),
+        "updater" => "win-updater".to_string(),
         _ => return Err("Invalid window type".into()),
     };
 
@@ -258,6 +259,7 @@ async fn open_aux_window(
         "progress" => suggested_filename.clone().unwrap_or_else(|| "Download Progress".to_string()),
         "complete" => "Download Complete".to_string(),
         "settings" => "Options".to_string(),
+        "updater" => "UPDATER".to_string(),
         _ => return Err("Invalid window type".into()),
     };
 
@@ -266,6 +268,7 @@ async fn open_aux_window(
         "progress" => (580.0, 580.0, true),
         "complete" => (520.0, 260.0, false),
         "settings" => (620.0, 480.0, false),
+        "updater" => (460.0, 300.0, false),
         _ => return Err("Invalid window type".into()),
     };
 

@@ -9,6 +9,7 @@ import { DownloadFileInfoModal } from "./features/downloads/components/DownloadF
 import { DownloadProgressModal } from "./features/downloads/components/DownloadProgressModal";
 import { DownloadCompleteModal } from "./features/downloads/components/DownloadCompleteModal";
 import { SettingsModal } from "./features/settings/components/SettingsModal";
+import { UpdateModal } from "./features/settings/components/UpdateModal";
 import { CustomTrayMenu } from "./features/tray/components/CustomTrayMenu";
 const LazyApp = lazy(() => import("./App"));
 
@@ -236,6 +237,22 @@ function RootRouter() {
     return (
       <div class="h-screen w-screen bg-[var(--bg-primary)] p-0 m-0 overflow-hidden select-none border border-[var(--border)]">
         <SettingsModal
+          isOpen={true}
+          isStandaloneWindow={true}
+          onClose={closeCurrentWindow}
+        />
+      </div>
+    );
+  }
+
+  if (view === "updater") {
+    onMount(() => {
+      revealWindowWhenReady("UPDATER");
+    });
+
+    return (
+      <div class="h-screen w-screen bg-[var(--bg-primary)] p-0 m-0 overflow-hidden select-none border border-[var(--border)]">
+        <UpdateModal
           isOpen={true}
           isStandaloneWindow={true}
           onClose={closeCurrentWindow}

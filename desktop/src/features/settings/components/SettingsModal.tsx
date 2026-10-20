@@ -79,7 +79,23 @@ export function SettingsModal(props: SettingsModalProps) {
         {activeTab() === "file_types" && <FileTypesTab />}
         {activeTab() === "general" && <GeneralTab />}
         {activeTab() === "about" && (
-          <AboutTab onCheckUpdates={() => setIsUpdateModalOpen(true)} />
+          <AboutTab
+            onCheckUpdates={async () => {
+              const { invoke } = await import("@tauri-apps/api/core");
+              try {
+                await invoke("open_aux_window", {
+                  windowType: "updater",
+                  taskId: null,
+                  initialUrl: null,
+                  audioUrl: null,
+                  suggestedFilename: null,
+                });
+              } catch (err) {
+                console.error("Failed to open updater window:", err);
+                setIsUpdateModalOpen(true);
+              }
+            }}
+          />
         )}
       </div>
 
