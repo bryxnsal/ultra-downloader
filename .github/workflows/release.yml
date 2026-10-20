@@ -67,9 +67,7 @@ jobs:
           - platform: 'windows-latest'
             args: ''
           - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-13'
-            args: '--target x86_64-apple-darwin'
+            args: '--target universal-apple-darwin'
           - platform: 'ubuntu-22.04'
             args: ''
 
@@ -82,7 +80,7 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || matrix.platform == 'macos-13' && 'x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -109,6 +107,7 @@ jobs:
             libssl-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev
+          cd core && cargo update -p rust-ini --precise 0.21.1
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
