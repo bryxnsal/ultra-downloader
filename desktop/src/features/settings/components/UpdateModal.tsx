@@ -149,6 +149,11 @@ export function UpdateModal(props: UpdateModalProps) {
 
   const handleRelaunch = async () => {
     try {
+      const update = updateInfo();
+      if (update?.version) {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("sync_appimage_filename", { newVersion: update.version }).catch(() => {});
+      }
       await relaunch();
     } catch (err: any) {
       console.error("Relaunch failed:", err);

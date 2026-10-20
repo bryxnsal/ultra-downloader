@@ -222,6 +222,44 @@ fn find_system_ffmpeg() -> Option<String> {
 }
 
 #[tauri::command]
+async fn check_ffmpeg_installed(state: State<'_, AppState>) -> Result<bool, String> {
+    let custom = state.manager.get_ffmpeg_path().await;
+    if let Some(c) = custom {
+        if !c.trim().is_empty() && std::path::Path::new(&c).exists() {
+            return Ok(true);
+        }
+    }
+    Ok(find_system_ffmpeg().is_some())
+}
+
+#[tauri::command]
+fn sync_appimage_filename(_new_version: String) -> Result<Option<String>, String> {
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(appimage_path) = std::env::var("APPIMAGE") {
+            let path = std::path::PathBuf::from(&appimage_path);
+            if let (Some(parent), Some(file_name)) = (path.parent(), path.file_name()) {
+                let name_str = file_name.to_string_lossy();
+                if name_str.ends_with(".AppImage") && !name_str.contains(&_new_version) {
+                    let re = regex::Regex::new(r"_\d+\.\d+\.\d+_").unwrap();
+                    let new_file_name = if re.is_match(&name_str) {
+                        re.replace(&name_str, format!("_{}_", _new_version)).to_string()
+                    } else {
+                        format!("Ultra.Downloader_{}_amd64.AppImage", _new_version)
+                    };
+
+                    let new_path = parent.join(&new_file_name);
+                    if let Ok(_) = std::fs::rename(&path, &new_path) {
+                        return Ok(Some(new_path.to_string_lossy().to_string()));
+                    }
+                }
+            }
+        }
+    }
+    Ok(None)
+}
+
+#[tauri::command]
 async fn open_aux_window(
     app: tauri::AppHandle,
     window_type: String,
@@ -564,7 +602,9 @@ pub fn run() {
             set_ffmpeg_path,
             get_extension_path,
             set_autostart,
-            is_autostart
+            is_autostart,
+            check_ffmpeg_installed,
+            sync_appimage_filename
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
