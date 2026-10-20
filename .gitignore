@@ -38,3 +38,7 @@ Thumbs.db
 
 # Documentation / Reference
 another/
+
+# Tauri private signing keys
+*.key
+*.key.pub
