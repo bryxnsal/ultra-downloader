@@ -1,7 +1,7 @@
 import { createSignal, onMount } from "solid-js";
 import { useSettings } from "../../../../shared/stores/settingsStore";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { RefreshCw, ExternalLink, ShieldCheck, Terminal, Cpu, Globe } from "lucide-solid";
+import { ExternalLink, Terminal, Globe } from "lucide-solid";
 
 interface AboutTabProps {
   onCheckUpdates: () => void;
@@ -45,9 +45,7 @@ export function AboutTab(props: AboutTabProps) {
       {/* App Header Identity */}
       <div class="p-4 border border-[var(--border)] bg-[var(--bg-secondary)] flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-[var(--accent)] text-[var(--bg-primary)] font-black text-xl flex items-center justify-center font-mono">
-            UDM
-          </div>
+          <div class="w-10 h-10 bg-white flex items-center justify-center shrink-0"></div>
           <div>
             <div class="flex items-center gap-2">
               <h3 class="font-bold text-[13px] text-[var(--text-main)] uppercase tracking-wider">
@@ -65,18 +63,16 @@ export function AboutTab(props: AboutTabProps) {
 
         <button
           onClick={props.onCheckUpdates}
-          class="px-3.5 py-2 bg-[var(--accent)] border border-[var(--accent)] text-[var(--bg-primary)] font-bold text-[10px] uppercase hover:opacity-90 active:translate-y-[1px] cursor-pointer flex items-center gap-1.5 shrink-0"
+          class="px-3.5 py-2 bg-[var(--accent)] border border-[var(--accent)] text-[var(--bg-primary)] font-bold text-[10px] uppercase hover:opacity-90 active:translate-y-[1px] cursor-pointer shrink-0"
         >
-          <RefreshCw class="w-3.5 h-3.5" />
-          <span>{t("check_updates_btn")}</span>
+          {t("check_updates_btn")}
         </button>
       </div>
 
       {/* System & Runtime Diagnostic Box */}
       <div class="space-y-2">
-        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
-          <Cpu class="w-3.5 h-3.5 text-[var(--accent)]" />
-          <span>{t("system_runtime_info")}</span>
+        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+          {t("system_runtime_info")}
         </h4>
 
         <div class="p-3 bg-[var(--bg-secondary)] border border-[var(--border)] divide-y divide-[var(--border)] text-[10px] font-mono">
