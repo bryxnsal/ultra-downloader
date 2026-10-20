@@ -1,6 +1,6 @@
 pkgbase = ultra-downloader-bin
 	pkgdesc = High-performance Multi-threaded Dynamic Downloader inspired by IDM
-	pkgver = 0.2.3
+	pkgver = 0.2.4
 	pkgrel = 1
 	url = https://github.com/bryxnsal/ultra-downloader
 	arch = x86_64
@@ -14,7 +14,7 @@ pkgbase = ultra-downloader-bin
 	provides = ultra-downloader
 	conflicts = ultra-downloader
 	options = !strip
-	source_x86_64 = https://github.com/bryxnsal/ultra-downloader/releases/download/v0.2.3/Ultra.Downloader_0.2.3_amd64.deb
+	source_x86_64 = https://github.com/bryxnsal/ultra-downloader/releases/download/v0.2.4/Ultra.Downloader_0.2.4_amd64.deb
 	sha256sums_x86_64 = SKIP
 
 pkgname = ultra-downloader-bin
