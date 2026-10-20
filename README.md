@@ -47,6 +47,7 @@ Download ready-to-run installers and portable packages from [GitHub Releases](ht
 | **macOS (Intel)** | `.dmg` | Native `x86_64` build |
 | **Linux (Portable)** | `.AppImage` | Universal single-file executable for any Linux distro |
 | **Linux (Debian / Ubuntu)** | `.deb` | Native deb package with app menu and protocol handlers |
+| **Linux (Arch Linux / Manjaro)** | `AUR` (`ultra-downloader-bin`) | Install via `yay -S ultra-downloader-bin` or `paru -S ultra-downloader-bin` |
 | **Browser Extensions** | `.zip` | Packages for **Chrome / Edge / Brave** & **Firefox** |
 
 ---

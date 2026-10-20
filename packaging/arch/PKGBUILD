@@ -1,0 +1,35 @@
+# Maintainer: Brayan Salazar <bryxnsalazar@gmail.com>
+pkgname=ultra-downloader-bin
+pkgver=0.2.3
+pkgrel=1
+pkgdesc="High-performance Multi-threaded Dynamic Downloader inspired by IDM"
+arch=('x86_64')
+url="https://github.com/bryxnsal/ultra-downloader"
+license=('GPL-3.0-only')
+depends=(
+    'webkit2gtk-4.1'
+    'gtk3'
+    'libayatana-appindicator'
+    'openssl'
+    'hicolor-icon-theme'
+)
+optdepends=(
+    'ffmpeg: automatic audio/video muxing for YouTube 1080p+ streams'
+)
+provides=('ultra-downloader')
+conflicts=('ultra-downloader')
+options=('!strip')
+
+source_x86_64=("${url}/releases/download/v${pkgver}/Ultra.Downloader_${pkgver}_amd64.deb")
+sha256sums_x86_64=('SKIP')
+
+package() {
+    # Extract data payload from Debian package
+    tar -xf data.tar.gz -C "${pkgdir}"
+
+    # Ensure desktop file and icons permissions are standard
+    chmod -R 755 "${pkgdir}/usr/bin"
+    if [ -d "${pkgdir}/usr/share/applications" ]; then
+        chmod 644 "${pkgdir}/usr/share/applications/"*.desktop
+    fi
+}

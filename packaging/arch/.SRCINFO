@@ -1,0 +1,20 @@
+pkgbase = ultra-downloader-bin
+	pkgdesc = High-performance Multi-threaded Dynamic Downloader inspired by IDM
+	pkgver = 0.2.3
+	pkgrel = 1
+	url = https://github.com/bryxnsal/ultra-downloader
+	arch = x86_64
+	license = GPL-3.0-only
+	depends = webkit2gtk-4.1
+	depends = gtk3
+	depends = libayatana-appindicator
+	depends = openssl
+	depends = hicolor-icon-theme
+	optdepends = ffmpeg: automatic audio/video muxing for YouTube 1080p+ streams
+	provides = ultra-downloader
+	conflicts = ultra-downloader
+	options = !strip
+	source_x86_64 = https://github.com/bryxnsal/ultra-downloader/releases/download/v0.2.3/Ultra.Downloader_0.2.3_amd64.deb
+	sha256sums_x86_64 = SKIP
+
+pkgname = ultra-downloader-bin
