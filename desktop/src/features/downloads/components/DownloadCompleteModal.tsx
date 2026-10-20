@@ -22,6 +22,7 @@ export function DownloadCompleteModal(props: DownloadCompleteModalProps) {
     if (!props.task?.destination_path) return;
     try {
       await openPath(props.task.destination_path);
+      props.onClose();
     } catch (err) {
       console.error("Error abriendo archivo:", err);
       setErrorStatus(String(err));
