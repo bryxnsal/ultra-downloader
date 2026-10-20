@@ -2,6 +2,7 @@ import { createSignal, createEffect, Show, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { DownloadTask, UrlMetadata } from "../types";
 import { formatBytes } from "../../../shared/utils";
+import { joinPaths, splitPath, normalizePath } from "../../../shared/pathUtils";
 import { useSettings } from "../../../shared/stores/settingsStore";
 import { WindowControls } from "../../../shared/components/WindowControls";
 import { X, Folder, HelpCircle, HardDrive, ShieldCheck } from "lucide-solid";
@@ -23,6 +24,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
   const [urlInput, setUrlInput] = createSignal(props.initialUrl || "");
   const [audioUrlInput, setAudioUrlInput] = createSignal(props.audioUrl || null);
   const [category, setCategory] = createSignal("General");
+  const [baseFolder, setBaseFolder] = createSignal(settings().saveToDefault);
   const [savePath, setSavePath] = createSignal(settings().saveToDefault);
   const [rememberPath, setRememberPath] = createSignal(true);
   const [description, setDescription] = createSignal("");
@@ -31,9 +33,20 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
 
   const categories = ["General", "Compressed", "Documents", "Music", "Programs", "Video"];
 
-  const joinPath = (dir: string, file: string) => {
-    const cleanDir = (dir || "").replace(/[/\\]+$/, "");
-    return cleanDir ? `${cleanDir}\\${file}` : file;
+  const computeDestination = (baseDir: string, cat: string, filename: string): string => {
+    const cleanFile = filename || "download.bin";
+    const cleanBase = baseDir || settings().saveToDefault || "";
+    if (cat === "General") {
+      return joinPaths(cleanBase, cleanFile);
+    }
+    return joinPaths(cleanBase, cat, cleanFile);
+  };
+
+  const updateCategoryAndPath = (newCat: string) => {
+    setCategory(newCat);
+    const { filename } = splitPath(savePath());
+    const finalFile = filename || probedMeta()?.suggested_filename || "download.bin";
+    setSavePath(computeDestination(baseFolder(), newCat, finalFile));
   };
 
   const probeUrlHandler = async () => {
@@ -52,7 +65,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
         audio_url: audioUrlInput(),
         suggested_filename: finalFilename
       });
-      setSavePath(joinPath(settings().saveToDefault, finalFilename));
+      setSavePath(computeDestination(baseFolder(), category(), finalFilename));
     } catch {
       const fallbackName = customFilename || u.split("/").pop()?.split("?")[0] || "download.bin";
       setProbedMeta({
@@ -63,7 +76,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
         accepts_ranges: false,
         content_type: "application/octet-stream",
       });
-      setSavePath(joinPath(settings().saveToDefault, fallbackName));
+      setSavePath(computeDestination(baseFolder(), category(), fallbackName));
     } finally {
       setProbing(false);
     }
@@ -164,16 +177,16 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
   const handleBrowseFolder = async () => {
     try {
       const currentFull = savePath();
-      const parts = currentFull.split(/[/\\]/);
-      const currentFilename = parts.pop() || "download.bin";
-      const currentDir = parts.join("\\");
+      const { dir: currentDir, filename: currentFilename } = splitPath(currentFull);
 
       const chosenFolder = await invoke<string | null>("pick_folder", {
-        defaultPath: currentDir || settings().saveToDefault,
+        defaultPath: currentDir || baseFolder() || settings().saveToDefault,
       });
 
       if (chosenFolder) {
-        const newPath = joinPath(chosenFolder, currentFilename);
+        setBaseFolder(chosenFolder);
+        const finalFile = currentFilename || probedMeta()?.suggested_filename || "download.bin";
+        const newPath = computeDestination(chosenFolder, category(), finalFile);
         setSavePath(newPath);
       }
     } catch (err) {
@@ -236,7 +249,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
           <div class="col-span-3 flex gap-1">
             <select
               value={category()}
-              onChange={(e) => setCategory(e.currentTarget.value)}
+              onChange={(e) => updateCategoryAndPath(e.currentTarget.value)}
               class="w-full border border-[var(--border)] bg-[var(--bg-primary)] px-2 py-1 text-[var(--text-main)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
             >
               {categories.map((c) => (
