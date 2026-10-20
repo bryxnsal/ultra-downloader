@@ -123,7 +123,13 @@ export function DownloadsTable(props: DownloadsTableProps) {
 
   onMount(() => {
     window.addEventListener("click", closeContextMenu);
-    window.addEventListener("contextmenu", closeContextMenu);
+    window.addEventListener("contextmenu", (e) => {
+      // Si el clic no fue dentro del menú contextual custom, ciérralo
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest(".udm-custom-context-menu")) {
+        closeContextMenu();
+      }
+    });
 
     if (containerRef) {
       setContainerWidth(containerRef.clientWidth);
@@ -423,7 +429,7 @@ export function DownloadsTable(props: DownloadsTableProps) {
 
           return (
             <div
-              class="fixed z-50 bg-[var(--bg-secondary)] border border-[var(--border)] shadow-2xl py-1 w-56 text-[11px] text-[var(--text-main)] select-none animate-in fade-in duration-100"
+              class="udm-custom-context-menu fixed z-50 bg-[var(--bg-secondary)] border border-[var(--border)] shadow-2xl py-1 w-56 text-[11px] text-[var(--text-main)] select-none animate-in fade-in duration-100"
               style={{
                 left: `${contextMenu().x}px`,
                 top: `${contextMenu().y}px`,

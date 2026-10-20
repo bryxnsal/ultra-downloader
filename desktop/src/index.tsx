@@ -14,6 +14,14 @@ import { CustomTrayMenu } from "./features/tray/components/CustomTrayMenu";
 const LazyApp = lazy(() => import("./App"));
 
 function RootRouter() {
+  onMount(() => {
+    // Bloqueo global estricto del menú contextual nativo del navegador
+    const disableContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("contextmenu", disableContextMenu, { capture: true });
+  });
+
   const params = new URLSearchParams(window.location.search);
   const view = params.get("view");
   const taskId = params.get("task_id");
