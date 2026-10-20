@@ -1,6 +1,6 @@
 # Maintainer: Brayan Salazar <bryxnsalazar@gmail.com>
 pkgname=ultra-downloader-bin
-pkgver=0.2.4
+pkgver=0.2.5
 pkgrel=1
 pkgdesc="High-performance Multi-threaded Dynamic Downloader inspired by IDM"
 arch=('x86_64')
