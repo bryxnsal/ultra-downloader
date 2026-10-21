@@ -35,6 +35,8 @@ function loadPersistedSettings(): SettingsState {
 
 const [settings, setSettings] = createSignal<SettingsState>(loadPersistedSettings());
 
+let autostartUserChanged = false;
+
 if (typeof window !== "undefined") {
   import("@tauri-apps/api/core").then(({ invoke }) => {
     invoke<{ download_dir: string; temp_dir: string; system_ffmpeg_path: string | null }>("get_system_directories")
@@ -67,6 +69,7 @@ if (typeof window !== "undefined") {
 
     invoke<boolean>("is_autostart")
       .then((enabled) => {
+        if (autostartUserChanged) return;
         setSettings((prev) => {
           if (prev.autostartEnabled !== enabled) {
             const next = { ...prev, autostartEnabled: enabled };
@@ -114,11 +117,22 @@ function syncToBackend(current: SettingsState) {
     invoke("set_ffmpeg_path", {
       path: current.ffmpegPath?.trim() || null,
     }).catch(() => {});
-
-    invoke("set_autostart", {
-      enabled: !!current.autostartEnabled,
-    }).catch(() => {});
   }).catch(() => {});
+}
+
+export async function setAutostartEnabled(enabled: boolean): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  autostartUserChanged = true;
+  const { invoke } = await import("@tauri-apps/api/core");
+  await invoke("set_autostart", { enabled });
+
+  setSettings((prev) => {
+    if (prev.autostartEnabled === enabled) return prev;
+    const next = { ...prev, autostartEnabled: enabled };
+    broadcastSettings(next);
+    return next;
+  });
 }
 
 // Initial sync to local bridge server
@@ -244,4 +258,3 @@ export function useSettings() {
     t,
   };
 }
-

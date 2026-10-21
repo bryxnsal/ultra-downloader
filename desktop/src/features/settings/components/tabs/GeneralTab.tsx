@@ -1,7 +1,23 @@
-import { useSettings } from "../../../../shared/stores/settingsStore";
+import { createSignal } from "solid-js";
+import { setAutostartEnabled, useSettings } from "../../../../shared/stores/settingsStore";
 
 export function GeneralTab() {
   const { settings, updateSettings, t } = useSettings();
+  const [autostartBusy, setAutostartBusy] = createSignal(false);
+  const [autostartError, setAutostartError] = createSignal<string | null>(null);
+
+  const handleAutostartChange = async (enabled: boolean) => {
+    if (autostartBusy()) return;
+    setAutostartBusy(true);
+    setAutostartError(null);
+    try {
+      await setAutostartEnabled(enabled);
+    } catch (error) {
+      setAutostartError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setAutostartBusy(false);
+    }
+  };
 
   return (
     <div class="space-y-4">
@@ -51,15 +67,19 @@ export function GeneralTab() {
         <p class="text-[9px] text-[var(--text-muted)]">
           {t("autostart_system_desc")}
         </p>
-        <label class="flex items-center gap-2 cursor-pointer pt-1">
+        <label class={`flex items-center gap-2 pt-1 ${autostartBusy() ? "opacity-60 cursor-wait" : "cursor-pointer"}`}>
           <input
             type="checkbox"
             checked={settings().autostartEnabled}
-            onChange={(e) => updateSettings({ autostartEnabled: e.currentTarget.checked })}
+            disabled={autostartBusy()}
+            onChange={(e) => void handleAutostartChange(e.currentTarget.checked)}
             class="accent-[var(--accent)]"
           />
           <span class="text-[10px] text-[var(--text-main)] font-mono">{t("autostart_system_label")}</span>
         </label>
+        {autostartError() && (
+          <p class="text-[9px] text-red-400 font-mono break-words">{autostartError()}</p>
+        )}
       </div>
 
       <div class="border border-[var(--border)] p-3 bg-[var(--bg-primary)] space-y-2">

@@ -1,4 +1,5 @@
 mod assembler;
+mod autostart;
 mod embedded_extension;
 mod engine;
 mod limiter;
@@ -8,19 +9,21 @@ pub mod server;
 mod storage;
 mod tray;
 
-use std::sync::Arc;
-use tauri::{AppHandle, Emitter, Manager, State};
 use crate::manager::DownloadManager;
 use crate::models::{DownloadTask, UrlMetadata};
 use crate::server::{BrowserBridgeConfig, BrowserServerState, DEFAULT_SERVER_PORT};
 use crate::storage::StateStorage;
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter, Manager, State};
 
 pub fn force_square_corners<R: tauri::Runtime>(_window: &tauri::WebviewWindow<R>) {
     #[cfg(windows)]
     {
         if let Ok(hwnd) = _window.hwnd() {
             unsafe {
-                use windows_sys::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND};
+                use windows_sys::Win32::Graphics::Dwm::{
+                    DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND,
+                };
                 let corner_pref = DWMWCP_DONOTROUND;
                 let _ = DwmSetWindowAttribute(
                     hwnd.0 as _,
@@ -39,10 +42,7 @@ pub struct AppState {
 }
 
 #[tauri::command]
-async fn set_ffmpeg_path(
-    path: Option<String>,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+async fn set_ffmpeg_path(path: Option<String>, state: State<'_, AppState>) -> Result<(), String> {
     state.manager.set_ffmpeg_path(path).await;
     Ok(())
 }
@@ -51,8 +51,17 @@ async fn set_ffmpeg_path(
 async fn set_autostart(enabled: bool, app: AppHandle) -> Result<(), String> {
     use tauri_plugin_autostart::ManagerExt;
     let autolaunch = app.autolaunch();
+
     if enabled {
-        autolaunch.enable().map_err(|e| e.to_string())
+        autostart::validate_enable()?;
+        autolaunch.enable().map_err(|e| e.to_string())?;
+
+        if let Err(error) = autostart::normalize_enabled(&app) {
+            let _ = autolaunch.disable();
+            return Err(error);
+        }
+
+        Ok(())
     } else {
         autolaunch.disable().map_err(|e| e.to_string())
     }
@@ -60,8 +69,7 @@ async fn set_autostart(enabled: bool, app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 async fn is_autostart(app: AppHandle) -> Result<bool, String> {
-    use tauri_plugin_autostart::ManagerExt;
-    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+    autostart::is_enabled(&app)
 }
 
 #[tauri::command]
@@ -85,7 +93,10 @@ async fn get_tasks(state: State<'_, AppState>) -> Result<Vec<DownloadTask>, Stri
 }
 
 #[tauri::command]
-async fn get_task(task_id: String, state: State<'_, AppState>) -> Result<Option<DownloadTask>, String> {
+async fn get_task(
+    task_id: String,
+    state: State<'_, AppState>,
+) -> Result<Option<DownloadTask>, String> {
     Ok(state.manager.get_task(&task_id).await)
 }
 
@@ -99,7 +110,10 @@ async fn add_task(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<DownloadTask, String> {
-    let task = state.manager.add_task(url, audio_url, filename, destination_path, connections).await?;
+    let task = state
+        .manager
+        .add_task(url, audio_url, filename, destination_path, connections)
+        .await?;
     let _ = app.emit("task-created", &task);
     Ok(task)
 }
@@ -196,7 +210,11 @@ fn get_system_directories(app: tauri::AppHandle) -> Result<SystemDirectories, St
 }
 
 fn find_system_ffmpeg() -> Option<String> {
-    let exe_name = if cfg!(windows) { "ffmpeg.exe" } else { "ffmpeg" };
+    let exe_name = if cfg!(windows) {
+        "ffmpeg.exe"
+    } else {
+        "ffmpeg"
+    };
 
     if let Ok(path_var) = std::env::var("PATH") {
         let separator = if cfg!(windows) { ';' } else { ':' };
@@ -210,7 +228,11 @@ fn find_system_ffmpeg() -> Option<String> {
 
     #[cfg(unix)]
     {
-        for standard_path in &["/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg", "/opt/homebrew/bin/ffmpeg"] {
+        for standard_path in &[
+            "/usr/local/bin/ffmpeg",
+            "/usr/bin/ffmpeg",
+            "/opt/homebrew/bin/ffmpeg",
+        ] {
             let p = std::path::Path::new(standard_path);
             if p.is_file() {
                 return Some(p.to_string_lossy().to_string());
@@ -241,9 +263,16 @@ fn sync_appimage_filename(_new_version: String) -> Result<Option<String>, String
             if let (Some(parent), Some(file_name)) = (path.parent(), path.file_name()) {
                 let name_str = file_name.to_string_lossy();
                 if name_str.ends_with(".AppImage") && !name_str.contains(&_new_version) {
-                    let new_file_name = if let (Some(start_idx), Some(end_idx)) = (name_str.find('_'), name_str.rfind('_')) {
+                    let new_file_name = if let (Some(start_idx), Some(end_idx)) =
+                        (name_str.find('_'), name_str.rfind('_'))
+                    {
                         if start_idx < end_idx {
-                            format!("{}_{}_{}", &name_str[..start_idx], _new_version, &name_str[end_idx + 1..])
+                            format!(
+                                "{}_{}_{}",
+                                &name_str[..start_idx],
+                                _new_version,
+                                &name_str[end_idx + 1..]
+                            )
                         } else {
                             format!("Ultra.Downloader_{}_amd64.AppImage", _new_version)
                         }
@@ -275,8 +304,14 @@ async fn open_aux_window(
 
     let label = match window_type.as_str() {
         "file-info" => "win-file-info".to_string(),
-        "progress" => format!("win-progress-{}", task_id.clone().unwrap_or_else(|| "active".into())),
-        "complete" => format!("win-complete-{}", task_id.clone().unwrap_or_else(|| "done".into())),
+        "progress" => format!(
+            "win-progress-{}",
+            task_id.clone().unwrap_or_else(|| "active".into())
+        ),
+        "complete" => format!(
+            "win-complete-{}",
+            task_id.clone().unwrap_or_else(|| "done".into())
+        ),
         "settings" => "win-settings".to_string(),
         "updater" => "win-updater".to_string(),
         "exclude-domain" => "win-exclude-domain".to_string(),
@@ -298,7 +333,9 @@ async fn open_aux_window(
 
     let initial_title = match window_type.as_str() {
         "file-info" => "Download File Info".to_string(),
-        "progress" => suggested_filename.clone().unwrap_or_else(|| "Download Progress".to_string()),
+        "progress" => suggested_filename
+            .clone()
+            .unwrap_or_else(|| "Download Progress".to_string()),
         "complete" => "Download Complete".to_string(),
         "settings" => "Options".to_string(),
         "updater" => "UPDATER".to_string(),
@@ -327,7 +364,10 @@ async fn open_aux_window(
         query.push_str(&format!("&audio_url={}", urlencoding_param(&au)));
     }
     if let Some(fn_val) = suggested_filename {
-        query.push_str(&format!("&suggested_filename={}", urlencoding_param(&fn_val)));
+        query.push_str(&format!(
+            "&suggested_filename={}",
+            urlencoding_param(&fn_val)
+        ));
     }
 
     let mut builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(query.into()))
@@ -363,10 +403,7 @@ async fn open_aux_window(
 }
 
 #[tauri::command]
-async fn close_aux_window(
-    app: tauri::AppHandle,
-    label: String,
-) -> Result<(), String> {
+async fn close_aux_window(app: tauri::AppHandle, label: String) -> Result<(), String> {
     use tauri::Manager;
     if let Some(win) = app.get_webview_window(&label) {
         let _ = win.destroy();
@@ -398,9 +435,19 @@ fn handle_deep_link(app: &AppHandle, raw_url: &str) {
                 let engine = base64::engine::general_purpose::STANDARD;
                 if let Ok(bytes) = engine.decode(b64_data.as_bytes()) {
                     if let Ok(json_val) = serde_json::from_slice::<serde_json::Value>(&bytes) {
-                        extracted_url = json_val.get("url").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-                        extracted_audio = json_val.get("audio_url").and_then(|v| v.as_str()).map(|s| s.to_string());
-                        extracted_filename = json_val.get("filename").and_then(|v| v.as_str()).map(|s| s.to_string());
+                        extracted_url = json_val
+                            .get("url")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or_default()
+                            .to_string();
+                        extracted_audio = json_val
+                            .get("audio_url")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
+                        extracted_filename = json_val
+                            .get("filename")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
                         let _ = app.emit("browser-download-intercepted", json_val);
                     }
                 }
@@ -436,7 +483,8 @@ fn handle_deep_link(app: &AppHandle, raw_url: &str) {
                 Some(extracted_url),
                 extracted_audio,
                 extracted_filename,
-            ).await;
+            )
+            .await;
         });
     }
 }
@@ -498,7 +546,8 @@ pub fn run() {
                 }
             }
 
-            if !has_link {
+            let is_autostart_launch = argv.iter().any(|arg| arg == "--autostart");
+            if !has_link && !is_autostart_launch {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.unminimize();
@@ -525,7 +574,10 @@ pub fn run() {
                 }
             });
 
-            let app_dir = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+            let app_dir = app
+                .path()
+                .app_data_dir()
+                .unwrap_or_else(|_| std::path::PathBuf::from("."));
             let db_path = app_dir.join("udm_state.db");
             let storage = Arc::new(StateStorage::new(db_path)?);
             let manager = Arc::new(DownloadManager::new(storage));
@@ -543,17 +595,19 @@ pub fn run() {
 
             let is_autostart_boot = std::env::args().any(|arg| arg == "--autostart");
 
-            let mut main_builder = tauri::WebviewWindowBuilder::new(
-                app,
-                "main",
-                tauri::WebviewUrl::default()
-            )
-            .title("Ultra Downloader")
-            .inner_size(1050.0, 680.0)
-            .min_inner_size(800.0, 500.0)
-            .resizable(true)
-            .decorations(false)
-            .visible(!is_autostart_boot);
+            #[cfg(target_os = "macos")]
+            if is_autostart_boot {
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            }
+
+            let mut main_builder =
+                tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
+                    .title("Ultra Downloader")
+                    .inner_size(1050.0, 680.0)
+                    .min_inner_size(800.0, 500.0)
+                    .resizable(true)
+                    .decorations(false)
+                    .visible(!is_autostart_boot);
 
             if let Some(icon) = app.default_window_icon() {
                 main_builder = main_builder.icon(icon.clone())?;
@@ -567,7 +621,13 @@ pub fn run() {
             let main_win = main_builder.build()?;
             force_square_corners(&main_win);
 
-            tray::setup_tray(app)?;
+            if let Err(error) = tray::setup_tray(app) {
+                eprintln!("Failed to initialize the tray icon: {error}");
+                if is_autostart_boot {
+                    let _ = main_win.show();
+                    let _ = main_win.set_focus();
+                }
+            }
 
             Ok(())
         })
@@ -612,6 +672,15 @@ pub fn run() {
             check_ffmpeg_installed,
             sync_appimage_filename
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { .. } = event {
+                restore_main_window(app.clone());
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            let _ = (app, event);
+        });
 }
