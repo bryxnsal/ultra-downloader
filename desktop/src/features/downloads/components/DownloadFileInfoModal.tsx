@@ -510,7 +510,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
       {/* Footer de Acciones (IDM Style: Download Later | Start Download | Cancel) */}
       <div class="border-t border-[var(--border)] bg-[var(--bg-surface)] px-3.5 py-2 flex items-center justify-between shrink-0">
         <button
-          onClick={handleLater}
+          onClick={() => handleLater()}
           disabled={!urlInput().trim()}
           class="border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-1 font-bold text-[var(--text-main)] hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40 cursor-pointer uppercase tracking-wider text-[11px] transition-colors"
         >
@@ -519,7 +519,7 @@ export function DownloadFileInfoModal(props: DownloadFileInfoModalProps) {
 
         <div class="flex items-center gap-2">
           <button
-            onClick={handleStart}
+            onClick={() => handleStart()}
             disabled={!urlInput().trim()}
             class="border border-[var(--accent)] bg-[var(--accent)] text-[var(--bg-primary)] px-4 py-1 font-bold hover:brightness-110 disabled:opacity-40 cursor-pointer uppercase tracking-wider text-[11px] shadow-sm transition-all"
           >
