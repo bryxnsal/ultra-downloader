@@ -54,6 +54,7 @@ jobs:
           files: |
             ultra-extension-chrome.zip
             ultra-extension-firefox.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -121,6 +122,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Ultra Downloader ${{ github.ref_name }}'
           releaseBody: 'High-performance Multi-threaded Dynamic Downloader inspired by IDM. Compatible with Windows, macOS, and Linux.'
+          generateReleaseNotes: true
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
