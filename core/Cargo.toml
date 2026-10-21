@@ -1,6 +1,6 @@
 [package]
 name = "ultra-downloader"
-version = "0.2.5"
+version = "0.2.6"
 description = "High-performance Multi-threaded Dynamic Downloader inspired by IDM"
 authors = ["Brayan Salazar <brayan@example.com>"]
 edition = "2021"

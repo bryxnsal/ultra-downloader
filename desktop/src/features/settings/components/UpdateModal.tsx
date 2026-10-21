@@ -22,7 +22,7 @@ type UpdateStatus =
 
 export function UpdateModal(props: UpdateModalProps) {
   const { t } = useSettings();
-  const currentAppVersion = "0.2.5";
+  const currentAppVersion = "0.2.6";
 
   const [status, setStatus] = createSignal<UpdateStatus>("checking");
   const [updateInfo, setUpdateInfo] = createSignal<Update | null>(null);
